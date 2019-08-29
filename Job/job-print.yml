@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: print-config
+spec:
+  template:
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: polls-init
+      containers:
+      - name: init
+        image: ubuntu:18.04
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/config
+        command: ["/bin/bash"]
+        args: ["-c", "cat /etc/config/init-script.py"]
+        env:
+          - name: MY_VAR
+            valueFrom:
+              configMapKeyRef:
+                name: polls-init
+                key: VAR
+      restartPolicy: Never

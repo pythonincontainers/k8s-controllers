@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: my-rs # Name of ReplicaSet Controller
+  labels: # Labels of ReplicaSet Controller
+    env: development
+spec:
+  replicas: 5 # Desired number of identical Pod Replicas managed by this Controller
+  selector: # Selector for Pods controlled by ReplicaSet
+    matchLabels: # Pods must have all these Labels to match the Selector
+      app: k8s-env
+      env: development
+  template: # Template of the Pods created by this ReplicaSet Controller
+    metadata: # Metadata of every Pod created by this ReplicaSet Controller
+      name: rs-pod-name # ingored by ReplicaSet, which uses own Pod Names
+      labels: # Labels of every Pod created by this ReplicaSet Controller
+        app: k8s-env # must be the same as Labels in ReplicaSet Selector above
+        env: development # must be the same as Labels in ReplicaSet Selector above
+    spec: # Specification of the Pods created by this ReplicaSet Controller
+      hostname: my-pod
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: k8s-env-container
+          image: pythonincontainers/k8s-env:v1.0
+          ports:
+            - containerPort: 5000
+          env:
+            - name: fieldPath-metadata_name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: fieldPath-metadata_namespace
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: fieldPath-metadata_uid
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: fieldPath-status_podIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: fieldPath-status_hostIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: fieldPath-spec_nodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: fieldPath-spec_serviceAccountName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName

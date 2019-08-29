@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-env-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: k8s-env
+  template:
+    metadata:
+      labels:
+        app: k8s-env
+    spec:
+      containers:
+      - name: display-env
+        image: pythonincontainers/k8s-env:v1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+    

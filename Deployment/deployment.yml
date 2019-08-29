@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-dep # Name of Deployment Controller
+  labels: # Labels of Deployment Controller
+    env: development
+spec:
+  replicas: 3 # Desired number of identical Pod Replicas managed by this Deployment Controller
+  strategy: # (optional) Strategy to replace existing Pods
+    type: RollingUpdate # choose one of "Recreate" to remove old Pods all at once and create New all at once, or "RollingUpdate" to replace Pods gradually
+    rollingUpdate: # Optional parameters in case of strategy==RollingUpdate
+      maxSurge: 1 # how many Pods can be created OVER "replicas" number, when updating Deployment, can be a number of Pods or percentage of "replicas"
+      maxUnavailable: 0 # how many Pods can be unavailable, when updating Deployment, can be a number of Pods or percentage of "replicas"
+  selector: # Selector for Pods controlled by Deployment's ReplicaSets
+    matchLabels: # Pods must have all these Labels to match the Selector
+      app: k8s-env
+      env: development
+      # Deployment Controller automatically adds "pod-template-hash" Label to each ReplicaSet
+  template: # Template of the Pods created by the ReplicaSets of this Deployment Controller
+    metadata: # Metadata of every Pod created by ReplicaSet Controller
+      name: rs-pod-name # ingored by ReplicaSet, which uses own Pod Names
+      labels: # Labels of every Pod created by ReplicaSet Controller
+        app: k8s-env # must be the same as Labels in Selector above
+        env: development # must be the same as Labels in ReplicaSet Selector above
+        # Deployment Controller automatically adds "pod-template-hash" Label to each ReplicaSet
+    spec: # Specification of the Pods created by ReplicaSet Controller
+      hostname: my-pod
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: k8s-env-container
+          image: pythonincontainers/k8s-env:v1.0
+          ports:
+            - containerPort: 5000
+          livenessProbe: # livenessProbe used to determine whether a Pod is alive; if probe fails, the Pod is restarted
+            tcpSocket: # probe uses TCP Connect to determin Pod's availability; if connection is established, the Probe is succesful
+              port: 5000 # port number used in tcpSocket probe
+            initialDelaySeconds: 3 # wait with first Probe this time after Pod start
+            periodSeconds: 10 # periodically run the Probe once very this number of seconds
+          readinessProbe: # readinessProbe used to determine whether a Pod is ready to accept requests; if probe fails, the Pod stays alive, but is taken off the Service Backends list and doesn't get requests until Ready again
+            httpGet: # probe uses HTTP GET to determin Pod's availability; status code of 200-300 is a success
+              path: / # HTTP path on Pod's IP address used in HTTP GET probe
+              port: 5000 # port number used in HTTP GET probe
+            initialDelaySeconds: 3 # wait with first Probe this time after Pod start
+            periodSeconds: 10 # periodically run the Probe once very this number of seconds
+          env:
+            - name: fieldPath-metadata_name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: fieldPath-metadata_namespace
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: fieldPath-metadata_uid
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: fieldPath-status_podIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: fieldPath-status_hostIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: fieldPath-spec_nodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: fieldPath-spec_serviceAccountName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName

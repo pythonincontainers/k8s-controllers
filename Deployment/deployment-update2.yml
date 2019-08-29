@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-dep
+  labels:
+    env: development
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: k8s-env
+      env: development
+      # Deployment Controller automatically adds "pod-template-hash" Label to each ReplicaSet
+  template: # Pod Template Update: Container Port changed
+    metadata:
+      name: rs-pod-name
+      labels:
+        app: k8s-env
+        env: development
+        # Deployment Controller automatically adds "pod-template-hash" Label to each ReplicaSet
+    spec:
+      hostname: my-pod
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: k8s-env-container
+          image: nginx:1.17.0
+          ports:
+            - containerPort: 80 # Container Port updated
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          env:
+            - name: fieldPath-metadata_name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: fieldPath-metadata_namespace
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: fieldPath-metadata_uid
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: fieldPath-status_podIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: fieldPath-status_hostIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: fieldPath-spec_nodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: fieldPath-spec_serviceAccountName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName

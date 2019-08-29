@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-set # Name of StatefulSet Controller
+  labels: # Labels of StatefulSet Controller
+    env: development
+spec:
+  serviceName: set-service # Mandatory for StatefulSet, links it to a Head-less Service; Service must be created before StatefulSet
+  volumeClaimTemplates: # Optional for StatefulSet, creates Persistent Volume Claims for StatefulSet Pods; Volumes are Retained after Pods die
+    - metadata:
+        name: set-volume # PVC Names are contatenating this name with Pod name: set-volume-my-set-0, set-volume-my-set-1, etc.
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi
+  # The rest is as in Deployment Controller
+  replicas: 3 # Desired number of identical Pod Replicas managed by this StatefulSet Controller
+  selector: # Selector for Pods controlled by StatefulSet
+    matchLabels: # Pods must have all these Labels to match the Selector
+      app: k8s-env
+      env: development
+  template: # Template of the Pods created by the StatefulSet Controller
+    metadata: # Metadata of every Pod created by StatefulSet Controller
+      name: set-pod-name # Ignored by StatefulSet; Pod Name is StatefulSet Name with "-" and Pod sequence number (ordinal): my-set-0, my-set-1, etc.
+      labels: # Labels of every Pod created by StatefulSet Controller
+        app: k8s-env # must be the same as Labels in Selector above
+        env: development # must be the same as Labels in StatefulSet Selector above
+        # Deployment Controller automatically adds "pod-template-hash" Label to each ReplicaSet
+    spec: # Specification of the Pods created by StatefulSet Controller
+      hostname: my-pod
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: k8s-env-container
+          image: pythonincontainers/k8s-env:v1.0
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: set-volume
+              mountPath: /data
+          livenessProbe:
+            tcpSocket:
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          env:
+            - name: fieldPath-metadata_name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: fieldPath-metadata_namespace
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: fieldPath-metadata_uid
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: fieldPath-status_podIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: fieldPath-status_hostIP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: fieldPath-spec_nodeName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: fieldPath-spec_serviceAccountName
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName

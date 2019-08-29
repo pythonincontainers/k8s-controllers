@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adopted-pod
+  labels:
+    app: k8s-env
+    env: development
+spec:
+  hostname: adopted-pod
+  containers:
+    - name: k8s-env-container
+      image: pythonincontainers/k8s-env:v1.0
+      ports:
+        - containerPort: 5000

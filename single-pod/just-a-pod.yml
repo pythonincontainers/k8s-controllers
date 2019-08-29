@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  labels:
+    app: just-hello
+spec:
+  hostname: my-host
+  containers:
+    - name: k8s-env-container
+      image: pythonincontainers/k8s-env:v1.0
+      ports:
+        - containerPort: 5000
+      env:
+        - name: fieldPath-metadata_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: fieldPath-metadata_namespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: fieldPath-metadata_uid
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: fieldPath-status_podIP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: fieldPath-status_hostIP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: fieldPath-spec_nodeName
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: fieldPath-spec_serviceAccountName
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
